@@ -143,6 +143,7 @@ To re-train our best model:
 python train_word2vec.py --save_dir /path/of/folder/to/save/model --dim 300 --data_dir /path/to.the/finished_files
 ```
 Which ```/path/to.the/finished_files``` is the path after you've done the preprocess step above. It must contain 3 folder train, test and val and maybe the vocab_cnt.pkl
+
 2. make the pseudo-labels
 ```
 python make_extraction_labels.py
