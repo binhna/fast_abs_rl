@@ -42,7 +42,7 @@ def main(args):
 
     sentences = Sentences(args.data_dir)
     model = gensim.models.Word2Vec(
-        size=args.dim, min_count=5, workers=16, sg=1)
+        size=args.dim, min_count=5, workers=16, sg=1, iter=15)
     model.build_vocab(sentences)
     print('vocab built in {}'.format(timedelta(seconds=time()-start)))
     model.train(sentences,
