@@ -1,3 +1,5 @@
+# This work forked from from Yen-Chun Chen, but I modify the code so it can work with Japanese
+The README below is from the original author, but there are some changes. You should read through it tho.
 # Fast Abstractive Summarization-RL
 This repository contains the code for our ACL 2018 paper:
 
@@ -127,6 +129,8 @@ This results in a negligible difference w.r.t. our paper results when running th
 and gives slightly better scores than our paper if running the new pretrained model.
 
 ## Train your own models
+The preprocess data is from *[here](https://github.com/ChenRocks/cnn-dailymail)*, but I changed some code to use mecab for word segmentation.
+
 Please follow the instructions
 *[here](https://github.com/ChenRocks/cnn-dailymail)*
 for downloading and preprocessing the CNN/DailyMail dataset.
