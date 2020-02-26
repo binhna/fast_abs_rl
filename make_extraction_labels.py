@@ -1,4 +1,5 @@
 """produce the dataset with (psudo) extraction label"""
+import argparse
 import os
 from os.path import exists, join
 import json
@@ -12,10 +13,10 @@ from utils import count_data
 from metric import compute_rouge_l
 
 
-try:
-    DATA_DIR = os.environ['DATA']
-except KeyError:
-    print('please use environment variable to specify data directories')
+# try:
+#     DATA_DIR = os.environ['DATA']
+# except KeyError:
+#     print('please use environment variable to specify data directories')
 
 
 def _split_words(texts):
@@ -39,8 +40,8 @@ def get_extract_label(art_sents, abs_sents):
     return extracted, scores
 
 @curry
-def process(split, i):
-    data_dir = join(DATA_DIR, split)
+def process(args, i):
+    data_dir = join(args.data_dir, args.mode)
     with open(join(data_dir, '{}.json'.format(i))) as f:
         data = json.loads(f.read())
     tokenize = compose(list, _split_words)
@@ -55,41 +56,48 @@ def process(split, i):
     with open(join(data_dir, '{}.json'.format(i)), 'w') as f:
         json.dump(data, f, indent=4)
 
-def label_mp(split):
+def label_mp(args):
     """ process the data split with multi-processing"""
     start = time()
-    print('start processing {} split...'.format(split))
-    data_dir = join(DATA_DIR, split)
+    print('start processing {} split...'.format(args.mode))
+    data_dir = join(args.data_dir, args.mode)
     n_data = count_data(data_dir)
     with mp.Pool() as pool:
-        list(pool.imap_unordered(process(split),
+        list(pool.imap_unordered(process(args),
                                  list(range(n_data)), chunksize=1024))
     print('finished in {}'.format(timedelta(seconds=time()-start)))
 
-def label(split):
-    start = time()
-    print('start processing {} split...'.format(split))
-    data_dir = join(DATA_DIR, split)
-    n_data = count_data(data_dir)
-    for i in range(n_data):
-        print('processing {}/{} ({:.2f}%%)\r'.format(i, n_data, 100*i/n_data),
-              end='')
-        with open(join(data_dir, '{}.json'.format(i))) as f:
-            data = json.loads(f.read())
-        tokenize = compose(list, _split_words)
-        art_sents = tokenize(data['article'])
-        abs_sents = tokenize(data['abstract'])
-        extracted, scores = get_extract_label(art_sents, abs_sents)
-        data['extracted'] = extracted
-        data['score'] = scores
-        with open(join(data_dir, '{}.json'.format(i)), 'w') as f:
-            json.dump(data, f, indent=4)
-    print('finished in {}'.format(timedelta(seconds=time()-start)))
+# def label(split):
+#     start = time()
+#     print('start processing {} split...'.format(split))
+#     data_dir = join(DATA_DIR, split)
+#     n_data = count_data(data_dir)
+#     for i in range(n_data):
+#         print('processing {}/{} ({:.2f}%%)\r'.format(i, n_data, 100*i/n_data),
+#               end='')
+#         with open(join(data_dir, '{}.json'.format(i))) as f:
+#             data = json.loads(f.read())
+#         tokenize = compose(list, _split_words)
+#         art_sents = tokenize(data['article'])
+#         abs_sents = tokenize(data['abstract'])
+#         extracted, scores = get_extract_label(art_sents, abs_sents)
+#         data['extracted'] = extracted
+#         data['score'] = scores
+#         with open(join(data_dir, '{}.json'.format(i)), 'w') as f:
+#             json.dump(data, f, indent=4)
+#     print('finished in {}'.format(timedelta(seconds=time()-start)))
 
 
-def main():
+def main(args):
     for split in ['val', 'train']:  # no need of extraction label when testing
-        label_mp(split)
+        setattr(args, 'mode', split)
+        label_mp(args)
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(
+        description='Make extraction model'
+    )
+    parser.add_argument('--data_dir', required=True,
+                        help='path data which contains train, val, test folders and vocab_cnt.pkl')
+    args = parser.parse_args()
+    main(args)
