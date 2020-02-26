@@ -30,17 +30,17 @@ from utils import make_vocab, make_embedding
 #       to low may increase # of PAD tokens
 BUCKET_SIZE = 6400
 
-try:
-    DATA_DIR = os.environ['DATA']
-except KeyError:
-    print('please use environment variable to specify data directories')
+# try:
+#     DATA_DIR = os.environ['DATA']
+# except KeyError:
+#     print('please use environment variable to specify data directories')
 
 class MatchDataset(CnnDmDataset):
     """ single article sentence -> single abstract sentence
     (dataset created by greedily matching ROUGE)
     """
-    def __init__(self, split):
-        super().__init__(split, DATA_DIR)
+    def __init__(self, args):
+        super().__init__(args.mode, args.data_dir)
 
     def __getitem__(self, i):
         js_data = super().__getitem__(i)
@@ -81,7 +81,9 @@ def configure_training(opt, lr, clip_grad, lr_decay, batch_size):
 
     return criterion, train_params
 
-def build_batchers(word2id, cuda, debug):
+def build_batchers(word2id, args):
+    cuda = args.cuda
+    debug = args.debug
     prepro = prepro_fn(args.max_art, args.max_abs)
     def sort_key(sample):
         src, target = sample
@@ -91,8 +93,9 @@ def build_batchers(word2id, cuda, debug):
         convert_batch_copy(UNK, word2id)
     )
 
+    setattr(args, 'mode', 'train')
     train_loader = DataLoader(
-        MatchDataset('train'), batch_size=BUCKET_SIZE,
+        MatchDataset(args), batch_size=BUCKET_SIZE,
         shuffle=not debug,
         num_workers=4 if cuda and not debug else 0,
         collate_fn=coll_fn
@@ -100,8 +103,9 @@ def build_batchers(word2id, cuda, debug):
     train_batcher = BucketedGenerater(train_loader, prepro, sort_key, batchify,
                                       single_run=False, fork=not debug)
 
+    setattr(args, 'mode', 'val')
     val_loader = DataLoader(
-        MatchDataset('val'), batch_size=BUCKET_SIZE,
+        MatchDataset(args), batch_size=BUCKET_SIZE,
         shuffle=False, num_workers=4 if cuda and not debug else 0,
         collate_fn=coll_fn
     )
@@ -112,11 +116,11 @@ def build_batchers(word2id, cuda, debug):
 def main(args):
     # create data batcher, vocabulary
     # batcher
-    with open(join(DATA_DIR, 'vocab_cnt.pkl'), 'rb') as f:
+    with open(join(args.data_dir, 'vocab_cnt.pkl'), 'rb') as f:
         wc = pkl.load(f)
     word2id = make_vocab(wc, args.vsize)
     train_batcher, val_batcher = build_batchers(word2id,
-                                                args.cuda, args.debug)
+                                                args)
 
     # make net
     net, net_args = configure_net(len(word2id), args.emb_dim,
@@ -175,7 +179,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--vsize', type=int, action='store', default=30000,
                         help='vocabulary size')
-    parser.add_argument('--emb_dim', type=int, action='store', default=128,
+    parser.add_argument('--emb_dim', type=int, action='store', default=300,
                         help='the dimension of word embedding')
     parser.add_argument('--w2v', action='store',
                         help='use pretrained word2vec embedding')
@@ -185,6 +189,8 @@ if __name__ == '__main__':
                         help='the number of layers of LSTM')
     parser.add_argument('--no-bi', action='store_true',
                         help='disable bidirectional LSTM encoder')
+    parser.add_argument('--data_dir', required=True,
+                        help='path data which contains train, val, test folders and vocab_cnt.pkl')
 
     # length limit
     parser.add_argument('--max_art', type=int, action='store', default=100,
