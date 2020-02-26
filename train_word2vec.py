@@ -13,15 +13,15 @@ import gensim
 from utils import count_data
 
 
-try:
-    DATA_DIR = os.environ['DATA']
-except KeyError:
-    print('please use environment variable to specify data directories')
+# try:
+#     DATA_DIR = os.environ['DATA']
+# except KeyError:
+#     print('please use environment variable to specify data directories')
 
 class Sentences(object):
     """ needed for gensim word2vec training"""
-    def __init__(self):
-        self._path = join(DATA_DIR, 'train')
+    def __init__(self, data_path):
+        self._path = join(data_path, 'train')
         self._n_data = count_data(self._path)
 
     def __iter__(self):
@@ -36,11 +36,11 @@ def main(args):
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
                         level=logging.INFO)
     start = time()
-    save_dir = args.path
+    save_dir = args.save_dir
     if not exists(save_dir):
         os.makedirs(save_dir)
 
-    sentences = Sentences()
+    sentences = Sentences(args.data_dir)
     model = gensim.models.Word2Vec(
         size=args.dim, min_count=5, workers=16, sg=1)
     model.build_vocab(sentences)
@@ -62,8 +62,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='train word2vec embedding used for model initialization'
     )
-    parser.add_argument('--path', required=True, help='root of the model')
+    parser.add_argument('--save_dir', required=True, help='path where you want to save the model')
     parser.add_argument('--dim', action='store', type=int, default=128)
+    parser.add_argument('--data_dir', required=True, help='path data which contains train, val, test folders and vocab_cnt.pkl')
     args = parser.parse_args()
 
     main(args)
