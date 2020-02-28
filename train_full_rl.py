@@ -30,16 +30,17 @@ from metric import compute_rouge_l, compute_rouge_n
 
 MAX_ABS_LEN = 30
 
-try:
-    DATA_DIR = os.environ['DATA']
-except KeyError:
-    print('please use environment variable to specify data directories')
+# try:
+#     DATA_DIR = os.environ['DATA']
+# except KeyError:
+#     print('please use environment variable to specify data directories')
 
 
 class RLDataset(CnnDmDataset):
     """ get the article sentences only (for decoding use)"""
-    def __init__(self, split):
-        super().__init__(split, DATA_DIR)
+
+    def __init__(self, args):
+        super().__init__(args.mode, args.data_dir)
 
     def __getitem__(self, i):
         js_data = super().__getitem__(i)
@@ -107,13 +108,15 @@ def build_batchers(batch_size):
         art_sents = list(filter(bool, map(tokenize(None), art_batch)))
         abs_sents = list(filter(bool, map(tokenize(None), abs_batch)))
         return art_sents, abs_sents
+    setattr(args, 'mode', 'train')
     loader = DataLoader(
-        RLDataset('train'), batch_size=batch_size,
+        RLDataset(args), batch_size=batch_size,
         shuffle=True, num_workers=4,
         collate_fn=coll
     )
+    setattr(args, 'mode', 'val')
     val_loader = DataLoader(
-        RLDataset('val'), batch_size=batch_size,
+        RLDataset(args), batch_size=batch_size,
         shuffle=False, num_workers=4,
         collate_fn=coll
     )
@@ -196,6 +199,8 @@ if __name__ == '__main__':
                         help='root of the extractor model')
     parser.add_argument('--ckpt', type=int, action='store', default=None,
                         help='ckeckpoint used decode')
+    parser.add_argument('--data_dir', required=True,
+                        help='path data which contains train, val, test folders and vocab_cnt.pkl')
 
     # training options
     parser.add_argument('--reward', action='store', default='rouge-l',
