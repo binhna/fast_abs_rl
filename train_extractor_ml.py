@@ -30,17 +30,17 @@ from data.batcher import BucketedGenerater
 
 BUCKET_SIZE = 6400
 
-try:
-    DATA_DIR = os.environ['DATA']
-except KeyError:
-    print('please use environment variable to specify data directories')
+# try:
+#     DATA_DIR = os.environ['DATA']
+# except KeyError:
+#     print('please use environment variable to specify data directories')
 
 class ExtractDataset(CnnDmDataset):
     """ article sentences -> extraction indices
     (dataset created by greedily matching ROUGE)
     """
-    def __init__(self, split):
-        super().__init__(split, DATA_DIR)
+    def __init__(self, args):
+        super().__init__(args.mode, args.data_dir)
 
     def __getitem__(self, i):
         js_data = super().__getitem__(i)
@@ -61,8 +61,9 @@ def build_batchers(net_type, word2id, cuda, debug):
     batchify = compose(batchify_fn(PAD, cuda=cuda),
                        convert_batch(UNK, word2id))
 
+    setattr(args, 'mode', 'train')
     train_loader = DataLoader(
-        ExtractDataset('train'), batch_size=BUCKET_SIZE,
+        ExtractDataset(args), batch_size=BUCKET_SIZE,
         shuffle=not debug,
         num_workers=4 if cuda and not debug else 0,
         collate_fn=coll_fn_extract
@@ -70,8 +71,9 @@ def build_batchers(net_type, word2id, cuda, debug):
     train_batcher = BucketedGenerater(train_loader, prepro, sort_key, batchify,
                                       single_run=False, fork=not debug)
 
+    setattr(args, 'mode', 'val')
     val_loader = DataLoader(
-        ExtractDataset('val'), batch_size=BUCKET_SIZE,
+        ExtractDataset(args), batch_size=BUCKET_SIZE,
         shuffle=False, num_workers=4 if cuda and not debug else 0,
         collate_fn=coll_fn_extract
     )
@@ -111,9 +113,9 @@ def configure_training(net_type, opt, lr, clip_grad, lr_decay, batch_size):
 
     if net_type == 'ff':
         criterion = lambda logit, target: F.binary_cross_entropy_with_logits(
-            logit, target, reduce=False)
+            logit, target, reduction='none')
     else:
-        ce = lambda logit, target: F.cross_entropy(logit, target, reduce=False)
+        ce = lambda logit, target: F.cross_entropy(logit, target, reduction='none')
         def criterion(logits, targets):
             return sequence_loss(logits, targets, ce, pad_idx=-1)
 
@@ -124,7 +126,7 @@ def main(args):
     assert args.net_type in ['ff', 'rnn']
     # create data batcher, vocabulary
     # batcher
-    with open(join(DATA_DIR, 'vocab_cnt.pkl'), 'rb') as f:
+    with open(join(args.data_dir, 'vocab_cnt.pkl'), 'rb') as f:
         wc = pkl.load(f)
     word2id = make_vocab(wc, args.vsize)
     train_batcher, val_batcher = build_batchers(args.net_type, word2id,
@@ -202,6 +204,8 @@ if __name__ == '__main__':
                         help='the number of layers of LSTM Encoder')
     parser.add_argument('--no-bi', action='store_true',
                         help='disable bidirectional LSTM encoder')
+    parser.add_argument('--data_dir', required=True,
+                        help='path data which contains train, val, test folders and vocab_cnt.pkl')
 
     # length limit
     parser.add_argument('--max_word', type=int, action='store', default=100,
