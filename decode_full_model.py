@@ -130,6 +130,23 @@ def rerank_one(beams):
         for b in beam[:n]:
             b.gram_cnt = Counter(_make_n_gram(b.sequence))
         return beam[:n]
+    beam_length = len(beams)
+    # summaries with > 20 sentences lead to memory problems
+    if beam_length > 20:
+        beams = beams[:20]
+        beams = map(process_beam(n=_PRUNE[len(beams)]), beams)
+        best_hyps = max(product(*beams), key=_compute_score)
+        
+        i = 0
+        dec_outs = []
+        for h in best_hyps:
+            if i > beam_length:
+                dec_outs.append(['NULL'])
+            else:
+                dec_outs.append(h.sequence)
+            i += 1
+        return dec_outs
+
     beams = map(process_beam(n=_PRUNE[len(beams)]), beams)
     best_hyps = max(product(*beams), key=_compute_score)
     dec_outs = [h.sequence for h in best_hyps]
