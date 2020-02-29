@@ -7,17 +7,17 @@ from os.path import join, exists
 from evaluate import eval_meteor, eval_rouge
 
 
-try:
-    _DATA_DIR = os.environ['DATA']
-except KeyError:
-    print('please use environment variable to specify data directories')
+# try:
+#     _DATA_DIR = os.environ['DATA']
+# except KeyError:
+#     print('please use environment variable to specify data directories')
 
 
 def main(args):
     dec_dir = join(args.decode_dir, 'output')
     with open(join(args.decode_dir, 'log.json')) as f:
         split = json.loads(f.read())['split']
-    ref_dir = join(_DATA_DIR, 'refs', split)
+    ref_dir = join(args.data_dir, 'refs', split)
     assert exists(ref_dir)
 
     if args.rouge:
@@ -48,6 +48,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--decode_dir', action='store', required=True,
                         help='directory of decoded summaries')
+    parser.add_argument('--data_dir', required=True,
+                        help='path data which contains train, val, test folders and vocab_cnt.pkl')
 
     args = parser.parse_args()
     main(args)
