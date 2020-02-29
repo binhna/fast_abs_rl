@@ -23,7 +23,8 @@ def main(args):
     if args.rouge:
         dec_pattern = r'(\d+).dec'
         ref_pattern = '#ID#.ref'
-        output = eval_rouge(dec_pattern, dec_dir, ref_pattern, ref_dir)
+        output = eval_rouge(dec_pattern, dec_dir, ref_pattern,
+                            ref_dir, rouge_path=args.rouge_path)
         metric = 'rouge'
     else:
         dec_pattern = '[0-9]+.dec'
@@ -50,6 +51,9 @@ if __name__ == '__main__':
                         help='directory of decoded summaries')
     parser.add_argument('--data_dir', required=True,
                         help='path data which contains train, val, test folders and vocab_cnt.pkl')
-
+    parser.add_argument('--rouge_path', default=None,
+                        help='path data which contains train, val, test folders and vocab_cnt.pkl')
+    parser.add_argument('--meteor_path', default=None,
+                        help='path data which contains train, val, test folders and vocab_cnt.pkl')
     args = parser.parse_args()
     main(args)
