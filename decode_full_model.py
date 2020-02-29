@@ -22,8 +22,14 @@ from decoding import Abstractor, RLExtractor, DecodeDataset, BeamAbstractor
 from decoding import make_html_safe
 
 
-def decode(save_path, model_dir, split, batch_size,
-           beam_size, diverse, max_len, cuda):
+def decode(args):
+    save_path = args.path
+    model_dir = args.model_dir
+    batch_size = args.batch
+    beam_size = args.beam
+    diverse = args.div
+    max_len = args.max_dec_word
+    cuda = args.cuda
     start = time()
     # setup model
     with open(join(model_dir, 'meta.json')) as f:
@@ -46,7 +52,7 @@ def decode(save_path, model_dir, split, batch_size,
     def coll(batch):
         articles = list(filter(bool, batch))
         return articles
-    dataset = DecodeDataset(split)
+    dataset = DecodeDataset(args)
 
     n_data = len(dataset)
     loader = DataLoader(
@@ -60,7 +66,7 @@ def decode(save_path, model_dir, split, batch_size,
     dec_log['abstractor'] = meta['net_args']['abstractor']
     dec_log['extractor'] = meta['net_args']['extractor']
     dec_log['rl'] = True
-    dec_log['split'] = split
+    dec_log['split'] = args.mode
     dec_log['beam'] = beam_size
     dec_log['diverse'] = diverse
     with open(join(save_path, 'log.json'), 'w') as f:
@@ -147,6 +153,8 @@ if __name__ == '__main__':
     data = parser.add_mutually_exclusive_group(required=True)
     data.add_argument('--val', action='store_true', help='use validation set')
     data.add_argument('--test', action='store_true', help='use test set')
+    parser.add_argument('--data_dir', required=True,
+                        help='path data which contains train, val, test folders and vocab_cnt.pkl')
 
     # decode options
     parser.add_argument('--batch', type=int, action='store', default=32,
@@ -164,6 +172,5 @@ if __name__ == '__main__':
     args.cuda = torch.cuda.is_available() and not args.no_cuda
 
     data_split = 'test' if args.test else 'val'
-    decode(args.path, args.model_dir,
-           data_split, args.batch, args.beam, args.div,
-           args.max_dec_word, args.cuda)
+    setattr(args, 'mode', data_split)
+    decode(args)
