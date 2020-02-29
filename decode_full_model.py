@@ -61,7 +61,8 @@ def decode(args):
     )
 
     # prepare save paths and logs
-    os.makedirs(join(save_path, 'output'))
+    if not os.path.exists(join(save_path, 'output')):
+        os.makedirs(join(save_path, 'output'))
     dec_log = {}
     dec_log['abstractor'] = meta['net_args']['abstractor']
     dec_log['extractor'] = meta['net_args']['extractor']

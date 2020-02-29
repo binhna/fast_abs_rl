@@ -15,7 +15,8 @@ except KeyError:
 
 def make_summaries(decode_dir, n_ext):
     out_dir = join(decode_dir, 'output_top{}'.format(args.n_ext))
-    os.makedirs(out_dir)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     decs = os.listdir(join(decode_dir, 'output_0'))
     dec_matcher = re.compile('[0-9]*.dec')
     decs = sorted([d for d in decs if dec_matcher.match(d)],
