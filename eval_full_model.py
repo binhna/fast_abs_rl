@@ -29,7 +29,7 @@ def main(args):
     else:
         dec_pattern = '[0-9]+.dec'
         ref_pattern = '[0-9]+.ref'
-        output = eval_meteor(dec_pattern, dec_dir, ref_pattern, ref_dir)
+        output = eval_meteor(dec_pattern, dec_dir, ref_pattern, ref_dir, meteor_path=args.meteor_path)
         metric = 'meteor'
     print(output)
     with open(join(args.decode_dir, '{}.txt'.format(metric)), 'w') as f:
