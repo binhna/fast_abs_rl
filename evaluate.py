@@ -41,14 +41,16 @@ def eval_rouge(dec_pattern, dec_dir, ref_pattern, ref_dir,
     return output
 
 
-try:
-    _METEOR_PATH = os.environ['METEOR']
-except KeyError:
-    print('Warning: METEOR is not configured')
-    _METEOR_PATH = None
-def eval_meteor(dec_pattern, dec_dir, ref_pattern, ref_dir):
+# try:
+#     _METEOR_PATH = os.environ['METEOR']
+# except KeyError:
+#     print('Warning: METEOR is not configured')
+#     _METEOR_PATH = None
+
+
+def eval_meteor(dec_pattern, dec_dir, ref_pattern, ref_dir, meteor_path=None):
     """ METEOR evaluation"""
-    assert _METEOR_PATH is not None
+    assert meteor_path is not None
     ref_matcher = re.compile(ref_pattern)
     refs = sorted([r for r in os.listdir(ref_dir) if ref_matcher.match(r)],
                   key=lambda name: int(name.split('.')[0]))
@@ -66,6 +68,6 @@ def eval_meteor(dec_pattern, dec_dir, ref_pattern, ref_dir):
             dec_f.write('\n'.join(map(read_file(dec_dir), decs)) + '\n')
 
         cmd = 'java -Xmx2G -jar {} {} {} -l en -norm'.format(
-            _METEOR_PATH, join(tmp_dir, 'dec.txt'), join(tmp_dir, 'ref.txt'))
+            meteor_path, join(tmp_dir, 'dec.txt'), join(tmp_dir, 'ref.txt'))
         output = sp.check_output(cmd.split(' '), universal_newlines=True)
     return output
