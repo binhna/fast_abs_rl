@@ -67,7 +67,7 @@ def eval_meteor(dec_pattern, dec_dir, ref_pattern, ref_dir, meteor_path=None):
             ref_f.write('\n'.join(map(read_file(ref_dir), refs)) + '\n')
             dec_f.write('\n'.join(map(read_file(dec_dir), decs)) + '\n')
 
-        cmd = 'java -Xmx2G -jar {} {} {} -l en -norm'.format(
+        cmd = 'java -Xmx2G -jar {} {} {} -l other -norm'.format(
             meteor_path, join(tmp_dir, 'dec.txt'), join(tmp_dir, 'ref.txt'))
         output = sp.check_output(cmd.split(' '), universal_newlines=True)
     return output
