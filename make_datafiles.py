@@ -20,15 +20,15 @@ END_TOKENS = ['.', '!', '?', '...', "'", "`", '"',
               dm_single_close_quote, dm_double_close_quote, ")", '。', '！', '？', '、', "’", "｀", '”', '...']
 
 all_train_urls = "/Users/binhna/Downloads/AIMESOFT/data/all_train.txt"
-all_val_urls = "/Users/binhna/Downloads/AIMESOFT/data/all_dev.txt"
+all_val_urls = "/Users/binhna/Downloads/AIMESOFT/data/all_val.txt"
 all_test_urls = "/Users/binhna/Downloads/AIMESOFT/data/all_test.txt"
 
-cnn_tokenized_stories_dir = "/Users/binhna/Downloads/AIMESOFT/data/livedoor_stories_tokenized"
-finished_files_dir = "/Users/binhna/Downloads/AIMESOFT/data/finished_files"
+cnn_tokenized_stories_dir = "/Users/binhna/Downloads/AIMESOFT/data/livedoor_stories_tokenized_v2"
+finished_files_dir = "/Users/binhna/Downloads/AIMESOFT/data/finished_files_v2"
 
 # These are the number of .story files we expect there to be in cnn_stories_dir
 # and dm_stories_dir
-num_expected_cnn_stories = 88483
+num_expected_cnn_stories = 197995
 # num_expected_dm_stories = 219506
 
 def mecab_tokenizer(sentence):
