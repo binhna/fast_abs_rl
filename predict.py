@@ -24,6 +24,9 @@ from decoding import Abstractor, RLExtractor, DecodeDataset, BeamAbstractor
 from decoding import make_html_safe
 from make_datafiles import mecab_tokenizer
 
+class ARGS():
+    def __init__(self):
+        self.model_dir = ''
 
 def clean_and_split(text):
     pattern = '(var.+?;)|(document.+?;)|(出典.+?\\n)|(出典.+?$)|(top image)|(\(全\d枚\))|(写真拡大 (全\d枚))'
@@ -44,29 +47,14 @@ def clean_and_split(text):
 
 def decode(args, predict=False):
     # save_path = args.path
-    model_dir = args.model_dir
     batch_size = args.batch
     beam_size = args.beam
     diverse = args.div
-    max_len = args.max_dec_word
-    cuda = args.cuda
     start = time()
+    extractor = args.extractor
+    abstractor = args.abstractor
     # setup model
-    with open(join(model_dir, 'meta.json')) as f:
-        meta = json.loads(f.read())
-    if meta['net_args']['abstractor'] is None:
-        # NOTE: if no abstractor is provided then
-        #       the whole model would be extractive summarization
-        assert beam_size == 1
-        abstractor = identity
-    else:
-        if beam_size == 1:
-            abstractor = Abstractor(join(model_dir, 'abstractor'),
-                                    max_len, cuda)
-        else:
-            abstractor = BeamAbstractor(join(model_dir, 'abstractor'),
-                                        max_len, cuda)
-    extractor = RLExtractor(model_dir, cuda=cuda)
+    
 
     # setup loader
     def coll(batch):
@@ -82,31 +70,12 @@ def decode(args, predict=False):
         )
     else:
         n_data = 1
-        #print(args.text)
         loader = clean_and_split(args.text)
         loader = [[[' '.join(mecab_tokenizer(line)) for line in loader]]]
-        #loader = [[args.text.split('\\n')]]
-        print(loader)
-        #loader = [[line for line in loader]]
-
-    # prepare save paths and logs
-    # if not os.path.exists(join(save_path, 'output')):
-    #     os.makedirs(join(save_path, 'output'))
-    # dec_log = {}
-    # dec_log['abstractor'] = meta['net_args']['abstractor']
-    # dec_log['extractor'] = meta['net_args']['extractor']
-    # dec_log['rl'] = True
-    # dec_log['split'] = args.mode
-    # dec_log['beam'] = beam_size
-    # dec_log['diverse'] = diverse
-    # with open(join(save_path, 'log.json'), 'w') as f:
-    #     json.dump(dec_log, f, indent=4)
-
-    # Decoding
+        
     i = 0
     with torch.no_grad():
         for i_debug, raw_article_batch in enumerate(loader):
-            #print(raw_article_batch)
             tokenized_article_batch = map(tokenize(None), raw_article_batch)
             ext_arts = []
             ext_inds = []
@@ -132,13 +101,14 @@ def decode(args, predict=False):
                 # with open(join(save_path, 'output/{}.dec'.format(i)),
                 #           'w') as f:
                 #     f.write(make_html_safe('\n'.join(decoded_sents)))
-                print(make_html_safe('\n'.join(decoded_sents)))
+                result = make_html_safe('\n'.join(decoded_sents))
                 i += 1
                 print('{}/{} ({:.2f}%) decoded in {} seconds\r'.format(
                     i, n_data, i/n_data*100,
                     timedelta(seconds=int(time()-start))
                 ), end='')
     print()
+    return result
 
 _PRUNE = defaultdict(
     lambda: 2,
@@ -198,35 +168,35 @@ def _compute_score(hyps):
     return (-repeat, lp)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='run decoding of the full model (RL)')
-    parser.add_argument('--path', required=True, help='path to store/eval')
-    parser.add_argument('--model_dir', help='root of the full model')
+# if __name__ == '__main__':
+#     parser = argparse.ArgumentParser(
+#         description='run decoding of the full model (RL)')
+#     # parser.add_argument('--path', required=True, help='path to store/eval')
+#     parser.add_argument('--model_dir', help='root of the full model')
 
-    # dataset split
-    data = parser.add_mutually_exclusive_group(required=True)
-    data.add_argument('--val', action='store_true', help='use validation set')
-    data.add_argument('--test', action='store_true', help='use test set')
-    parser.add_argument('--data_dir', required=True,
-                        help='path data which contains train, val, test folders and vocab_cnt.pkl')
+#     # dataset split
+#     data = parser.add_mutually_exclusive_group(required=True)
+#     # data.add_argument('--val', action='store_true', help='use validation set')
+#     # data.add_argument('--test', action='store_true', help='use test set')
+#     # parser.add_argument('--data_dir', required=True,
+#                         # help='path data which contains train, val, test folders and vocab_cnt.pkl')
 
-    # decode options
-    parser.add_argument('--batch', type=int, action='store', default=32,
-                        help='batch size of faster decoding')
-    parser.add_argument('--beam', type=int, action='store', default=1,
-                        help='beam size for beam-search (reranking included)')
-    parser.add_argument('--div', type=float, action='store', default=1.0,
-                        help='diverse ratio for the diverse beam-search')
-    parser.add_argument('--max_dec_word', type=int, action='store', default=30,
-                        help='maximun words to be decoded for the abstractor')
+#     # decode options
+#     parser.add_argument('--batch', type=int, action='store', default=32,
+#                         help='batch size of faster decoding')
+#     parser.add_argument('--beam', type=int, action='store', default=1,
+#                         help='beam size for beam-search (reranking included)')
+#     parser.add_argument('--div', type=float, action='store', default=1.0,
+#                         help='diverse ratio for the diverse beam-search')
+#     parser.add_argument('--max_dec_word', type=int, action='store', default=30,
+#                         help='maximun words to be decoded for the abstractor')
 
-    parser.add_argument('--no-cuda', action='store_true',
-                        help='disable GPU training')
-    data.add_argument('--text', type=str, help='article to be summary')
-    args = parser.parse_args()
-    args.cuda = torch.cuda.is_available() and not args.no_cuda
+#     parser.add_argument('--no-cuda', action='store_true',
+#                         help='disable GPU training')
+#     data.add_argument('--text', type=str, help='article to be summary')
+#     args = parser.parse_args()
+#     args.cuda = torch.cuda.is_available() and not args.no_cuda
 
-    data_split = 'test' if args.test else 'val'
-    setattr(args, 'mode', data_split)
-    decode(args, True)
+#     # data_split = 'test' if args.test else 'val'
+#     # setattr(args, 'mode', data_split)
+#     decode(args, True)
