@@ -37,7 +37,7 @@ else:
                                     max_len, cuda)
 extractor = RLExtractor(model_dir, cuda=cuda)
 
-@app.route('/summary', methods=['GET'])
+@app.route('/summary', methods=['POST'])
 def gey_summary():
     args = ARGS()
 
@@ -50,7 +50,7 @@ def gey_summary():
     setattr(args, 'extractor', extractor)
     setattr(args, 'abstractor', abstractor)
 
-    text = request.args.get('text')
+    text = request.form['text']
     setattr(args, 'text', text)
     result = decode(args, True)
     print(result)
