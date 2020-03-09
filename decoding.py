@@ -7,7 +7,7 @@ import pickle as pkl
 from itertools import starmap
 
 from cytoolz import curry
-
+import cv2
 import torch
 
 from utils import PAD, UNK, START, END
@@ -47,6 +47,7 @@ def load_best_ckpt(model_dir, reverse=False, map_location=None):
     ckpts = sorted([c for c in ckpts if ckpt_matcher.match(
         c) if c != ''], key=lambda c: float(c.split('-')[1]))
     print('loading checkpoint {}...'.format(ckpts[0]))
+    print(map_location)
     if map_location is not None:
         ckpt = torch.load(join(
             model_dir, 'ckpt/{}'.format(ckpts[0])), map_location=map_location)['state_dict']

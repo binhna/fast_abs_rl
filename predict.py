@@ -54,6 +54,7 @@ def decode(args, predict=False):
     extractor = args.extractor
     abstractor = args.abstractor
     # setup model
+    text = ''
     
 
     # setup loader
@@ -72,6 +73,7 @@ def decode(args, predict=False):
         n_data = 1
         loader = clean_and_split(args.text)
         loader = [[[' '.join(mecab_tokenizer(line)) for line in loader]]]
+        text = loader[0][0][0]
         
     i = 0
     with torch.no_grad():
@@ -108,7 +110,7 @@ def decode(args, predict=False):
                     timedelta(seconds=int(time()-start))
                 ), end='')
     print()
-    return result
+    return text, result
 
 _PRUNE = defaultdict(
     lambda: 2,

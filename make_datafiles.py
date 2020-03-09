@@ -10,7 +10,7 @@ import io
 import pickle as pkl
 from tqdm import tqdm
 import MeCab 
-tokenizer = MeCab.Tagger(f"-Ochasen -d /Users/binhna/Downloads/AIMESOFT/neologd_dic")
+tokenizer = MeCab.Tagger(f"-Ochasen -d /mnt/binhna/neologd_dic")
 
 
 dm_single_close_quote = '\u2019'  # unicode
