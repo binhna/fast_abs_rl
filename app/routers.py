@@ -69,12 +69,12 @@ def index():
 def gey_summary():
     args = ARGS()
 
-    setattr(args, 'model_dir', '../data/model')
+    setattr(args, 'model_dir', model_dir)
     setattr(args, 'batch', 1)
-    setattr(args, 'beam', 5)
+    setattr(args, 'beam', beam_size)
     setattr(args, 'div', 1.0)
     setattr(args, 'max_dec_word', 30)
-    setattr(args, 'cuda', False)
+    setattr(args, 'cuda', cuda)
     setattr(args, 'extractor', extractor)
     setattr(args, 'abstractor', abstractor)
 
