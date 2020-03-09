@@ -25,10 +25,11 @@ cors = CORS(app, resources={r'/*': {"origins": '*'}})
 app.config['CORS_HEADER'] = 'Content-Type'
 
 
-model_dir = '../data/model'
-beam_size = 5
-max_len = 30
-cuda = False
+model_dir = Config.model_dir
+beam_size = Config.beam_size
+max_len = Config.max_len
+cuda = Config.cuda
+
 with open(join(model_dir, 'meta.json')) as f:
     meta = json.loads(f.read())
 if meta['net_args']['abstractor'] is None:
