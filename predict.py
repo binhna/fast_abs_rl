@@ -73,9 +73,10 @@ def decode(args, predict=False):
         n_data = 1
         loader = clean_and_split(args.text)
         loader = [[[' '.join(mecab_tokenizer(line)) for line in loader]]]
-        text = loader[0][0][0]
+        text = '\n'.join(loader[0][0])
         
     i = 0
+    #print(text)
     with torch.no_grad():
         for i_debug, raw_article_batch in enumerate(loader):
             tokenized_article_batch = map(tokenize(None), raw_article_batch)
@@ -92,25 +93,27 @@ def decode(args, predict=False):
                 ext_inds += [(len(ext_arts), len(ext))]
                 ext_arts += [raw_art_sents[i] for i in ext]
             if beam_size > 1:
+                #print(ext_arts)
                 all_beams = abstractor(ext_arts, beam_size, diverse)
                 dec_outs = rerank_mp(all_beams, ext_inds)
             else:
                 dec_outs = abstractor(ext_arts)
             assert i == batch_size*i_debug
+            source_text = [''.join(sent) for sent in ext_arts]
             for j, n in ext_inds:
                 decoded_sents = [' '.join(dec) for dec in dec_outs[j:j+n]]
                 decoded_sents = decoded_sents[:20]
                 # with open(join(save_path, 'output/{}.dec'.format(i)),
                 #           'w') as f:
                 #     f.write(make_html_safe('\n'.join(decoded_sents)))
-                result = make_html_safe('\n'.join(decoded_sents))
+                result = make_html_safe('\n\n'.join(decoded_sents))
                 i += 1
                 print('{}/{} ({:.2f}%) decoded in {} seconds\r'.format(
                     i, n_data, i/n_data*100,
                     timedelta(seconds=int(time()-start))
                 ), end='')
     print()
-    return text, result
+    return text, result, source_text
 
 _PRUNE = defaultdict(
     lambda: 2,

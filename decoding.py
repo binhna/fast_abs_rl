@@ -45,7 +45,7 @@ def load_best_ckpt(model_dir, reverse=False, map_location=None):
     ckpts = os.listdir(join(model_dir, 'ckpt'))
     ckpt_matcher = re.compile('^ckpt-.*-[0-9]*')
     ckpts = sorted([c for c in ckpts if ckpt_matcher.match(
-        c) if c != ''], key=lambda c: float(c.split('-')[1]))
+        c) if c != ''], key=lambda c: float(c.split('-')[1]), reverse=reverse)
     print('loading checkpoint {}...'.format(ckpts[0]))
     print(map_location)
     if map_location is not None:
