@@ -93,4 +93,4 @@ def gey_summary():
         f.write(text)
         f.write("\n=============================================================================================\n")
         f.write(result)
-    return jsonify({'summary': result})
+    return jsonify({'summary': result, 'highlight': source_text})

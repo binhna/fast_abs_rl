@@ -31,15 +31,17 @@
 
 <body>
   <div class="container" style="padding: 20px">
-    <h3 style="margin-bottom: 30px; color: rgb(48,124,246);">Japanese Text Summarization</h3>
+    <h3 style="margin-bottom: 30px; color: rgb(48,124,246); text-align: center">テキスト自動要約ツール</h3>
     <div class="row">
       <div class="col-12 col-sm-6">
-        <textarea id="source" rows="20" class="form-control" placeholder="Input Text"></textarea>
+	<h5 style="margin-bottom: 30px; text-align: center">元のテキスト</h4>
+        <textarea id="source" rows="20" class="form-control" placeholder="自動要約したいテキストを入カしてください"></textarea>
         <div class="clearfix" style="margin-top: 20px;">
-          <button class="btn btn-primary float-right" id="summary-btn">Summary</button>
+          <button class="btn btn-primary float-right" id="summary-btn">要約する</button>
         </div>
       </div>
       <div class="col-12 col-sm-6">
+	<h5 style="margin-bottom: 30px; text-align: center">自動要約テキスト</h4>
         <ul id="dest"></ul>
       </div>
     </div>
@@ -65,8 +67,14 @@
             text: source
           },
           success: function (res) {
+	    console.log(res.highlight)
+	    var ul = document.getElementById('dest');
+  	    if (ul) {
+    	    	while (ul.firstChild) {
+      	    	    ul.removeChild(ul.firstChild);
+    		}
+  	    }
 	    //document.getElementById('source').style.display = "none"
-	    var ul = document.getElementById("dest");
 	    var r = res.summary.split("\n\n");
 	    for (const element of r) {
 		var li = document.createElement("li");
