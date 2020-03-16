@@ -1,0 +1,33 @@
+.header {
+    margin-right: auto;
+    margin-left: auto;
+    background-color: #e9ecef;
+}
+
+.title {
+    margin-bottom: 35px; 
+    color: rgb(48,124,246); 
+    text-align: center; 
+    font-size: 4rem;
+}
+
+.powerby {
+    text-align: center; 
+}
+
+#dest {
+    font-size: 15pt;
+
+}
+
+.sum-element {
+    margin: 20px 0;
+    font-family: 'Hiragino Kaku Gothic Pro',Meiryo,'MS PGothic',arial,sans-serif;
+}
+
+.jumbotron {
+    padding-top: 2rem;
+    padding-right: 2rem;
+    padding-bottom: 2rem;
+    padding-left: 2rem;
+}

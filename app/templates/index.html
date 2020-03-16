@@ -1,16 +1,12 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <!-- Required meta tags -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  ​
-  <!-- Bootstrap CSS -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" type="text/css" href="/app/static/styles/index.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
     integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-  ​
-  <title>Japanese Summarization</title>
   <style>
     textarea {
       border-width: 0;
@@ -18,79 +14,84 @@
       border-radius: 12px;
       padding: 20px;
     }
-
+  
     textarea:active textarea:focus {
       outline: none !important;
     }
-
+  
     textarea:hover {
       box-shadow: 4px 4px 4px 4px rgb(212, 230, 238);
     }
   </style>
 </head>
-
 <body>
+  <div class="jumbotron">
+    <div class="container">
+      <h1 class="display-3">テキスト自動要約ツール</h1>
+      <p>入力されたテキストを自動要約するツールです。Powered by <a href="http://www.aimesoft.com/ja" target="_blank">aimesoft</a></p>
+    </div>
+  </div>
   <div class="container" style="padding: 20px">
-    <h1 style="margin-bottom: 35px; color: rgb(48,124,246); text-align: center; font-size: 4rem;">テキスト自動要約ツール</h1>
+  
     <div class="row">
       <div class="col-12 col-sm-6">
-	<h2 style="margin-bottom: 20px; text-align: center; font-size: 2rem;">元のテキスト</h2>
+        <h2 style="margin-bottom: 20px; text-align: center; font-size: 2rem;">元のテキスト</h2>
         <textarea id="source" rows="20" class="form-control" placeholder="自動要約したいテキストを入カしてください"></textarea>
+       
         <div class="clearfix" style="margin-top: 20px;">
-		<button class="btn btn-primary float-right" id="summary-btn">自動要約する</button>
+          <button class="btn btn-primary float-right" id="summary-btn">自動要約する</button>
         </div>
       </div>
       <div class="col-12 col-sm-6">
-	<h2 style="margin-bottom: 20px; text-align: center; font-size: 2rem;">自動要約テキスト<h2>
-        <ul id="dest"></ul>
+        <h2 style="margin-bottom: 20px; text-align: center; font-size: 2rem;">自動要約テキスト<h2>
+            <ul id="dest"></ul>
       </div>
     </div>
   </div>
-  ​
+
   <!-- Optional JavaScript -->
   <!-- jQuery first, then Popper.js, then Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-    crossorigin="anonymous"></script>
+    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-    integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-    crossorigin="anonymous"></script>
+    integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
   <script>
     $(document).ready(function () {
-      $('#summary-btn').click(function () {
-        var source = $('#source').val()
-        $.ajax({
-          url: window.location.href + 'summary',
-          method: 'post',
-          data: {
-            text: source
-          },
-          success: function (res) {
-	    console.log(res.highlight)
-	    var ul = document.getElementById('dest');
-  	    if (ul) {
-    	    	while (ul.firstChild) {
-      	    	    ul.removeChild(ul.firstChild);
-    		}
-  	    }
-	    //document.getElementById('source').style.display = "none"
-	    var r = res.summary.split("\n\n");
-	    for (const element of r) {
-		var li = document.createElement("li");
-		li.appendChild(document.createTextNode(element));
-		ul.appendChild(li);
-	    }
-	    console.log(r)
-            $('#dest').val(res.summary)
-          },
-          error: function (e) {
-            console.error(e)
-          }
+        $('#summary-btn').click(function () {
+          var source = $('#source').val()
+          $.ajax({
+            url: "https://summary.gpu01.aimesoft.com:9081/" + 'summary',
+            method: 'post',
+            data: {
+              text: source
+            },
+            success: function (res) {
+              console.log(res.highlight)
+              var ul = document.getElementById('dest');
+              if (ul) {
+                while (ul.firstChild) {
+                  ul.removeChild(ul.firstChild);
+                }
+              }
+              //document.getElementById('source').style.display = "none"
+              var r = res.summary.split("\n\n");
+              for (const element of r) {
+                var li = document.createElement("li");
+                li.className = "sum-element";
+                li.appendChild(document.createTextNode(element));
+                ul.appendChild(li);
+              }
+              console.log(r)
+              console.log(res.highlight)
+              $('#dest').val(res.summary)
+            },
+            error: function (e) {
+              console.error(e)
+            }
+          })
         })
       })
-    })
   </script>
 </body>
-
 </html>
