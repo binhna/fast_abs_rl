@@ -15,7 +15,7 @@
     text-align: center; 
 }
 
-#dest {
+.dest {
     font-size: 15pt;
 
 }
@@ -23,6 +23,7 @@
 .sum-element {
     margin: 20px 0;
     font-family: 'Hiragino Kaku Gothic Pro',Meiryo,'MS PGothic',arial,sans-serif;
+    font-size: 17pt;
 }
 
 .jumbotron {

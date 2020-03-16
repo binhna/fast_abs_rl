@@ -43,7 +43,7 @@
         </div>
       </div>
       <div class="col-12 col-sm-6">
-        <h2 style="margin-bottom: 20px; text-align: center; font-size: 2rem;">自動要約テキスト<h2>
+        <h2 style="margin-bottom: 20px; text-align: center; font-size: 2rem;">自動要約テキスト</h2>
             <ul id="dest"></ul>
       </div>
     </div>
@@ -78,7 +78,7 @@
               var r = res.summary.split("\n\n");
               for (const element of r) {
                 var li = document.createElement("li");
-                li.className = "sum-element";
+                li.id = "sum-element";
                 li.appendChild(document.createTextNode(element));
                 ul.appendChild(li);
               }
