@@ -14,6 +14,7 @@ import os, sys
 from os.path import join
 from datetime import datetime
 import json
+from langdetect import detect
 from cytoolz import identity, concat, curry
 from decoding import Abstractor, RLExtractor, DecodeDataset, BeamAbstractor
 
@@ -26,26 +27,44 @@ cors = CORS(app, resources={r'/*': {"origins": '*'}})
 app.config['CORS_HEADER'] = 'Content-Type'
 
 
-model_dir = Config.model_dir
+model_dir_ja = Config.model_dir_ja
+model_dir_en = Config.model_dir_en
 beam_size = Config.beam_size
 max_len = Config.max_len
 cuda = Config.cuda
 
-with open(join(model_dir, 'meta.json')) as f:
-    meta = json.loads(f.read())
-if meta['net_args']['abstractor'] is None:
+with open(join(model_dir_ja, 'meta.json')) as f:
+    meta_ja = json.loads(f.read())
+if meta_ja['net_args']['abstractor'] is None:
     # NOTE: if no abstractor is provided then
     #       the whole model would be extractive summarization
     assert beam_size == 1
-    abstractor = identity
+    abstractor_ja = identity
 else:
     if beam_size == 1:
-        abstractor = Abstractor(join(model_dir, 'abstractor'),
+        abstractor_ja = Abstractor(join(model_dir_ja, 'abstractor'),
                                 max_len, cuda)
     else:
-        abstractor = BeamAbstractor(join(model_dir, 'abstractor'),
+        abstractor_ja = BeamAbstractor(join(model_dir_ja, 'abstractor'),
                                     max_len, cuda)
-extractor = RLExtractor(model_dir, cuda=cuda)
+extractor_ja = RLExtractor(model_dir_ja, cuda=cuda)
+
+
+with open(join(model_dir_en, 'meta.json')) as f:
+    meta_en = json.loads(f.read())
+if meta_en['net_args']['abstractor'] is None:
+    # NOTE: if no abstractor is provided then
+    #       the whole model would be extractive summarization
+    assert beam_size == 1
+    abstractor_en = identity
+else:
+    if beam_size == 1:
+        abstractor_en = Abstractor(join(model_dir_en, 'abstractor'),
+                                max_len, cuda)
+    else:
+        abstractor_en = BeamAbstractor(join(model_dir_en, 'abstractor'),
+                                    max_len, cuda)
+extractor_en = RLExtractor(model_dir_en, cuda=cuda)
 
 
 @app.after_request
@@ -69,7 +88,18 @@ def index():
 @app.route('/summary', methods=['POST'])
 def gey_summary():
     args = ARGS()
-
+    
+    text = request.form['text']
+    lang = detect(text)
+    print('Language: ', lang)
+    if lang == 'ja':
+        model_dir = model_dir_ja
+        extractor = extractor_ja
+        abstractor = abstractor_ja
+    else:
+        model_dir = model_dir_en
+        extractor = extractor_en
+        abstractor = abstractor_en
     setattr(args, 'model_dir', model_dir)
     setattr(args, 'batch', 1)
     setattr(args, 'beam', beam_size)
@@ -78,7 +108,7 @@ def gey_summary():
     setattr(args, 'cuda', cuda)
     setattr(args, 'extractor', extractor)
     setattr(args, 'abstractor', abstractor)
-    text = request.form['text']
+    #text = request.form['text']
     #print(text)
     
     setattr(args, 'text', text)
@@ -86,7 +116,14 @@ def gey_summary():
     print(source_text)
 
     #print(type(result))
-    result = result.replace(' ', '')
+    if lang == 'ja':
+        result = result.replace(' ', '')
+    else:
+        result = result.split('\n\n')
+        for i, r in enumerate(result):
+            r = r[0].upper() + r[1:]
+            result[i] = r
+        result = '\n\n'.join(result)
     #print(result)
     with open('/mnt/binhna/summary/log.txt', 'a') as f:
         f.write(f"\n\n======================={datetime.now().strftime('%Y-%m-%d %H:%M:%S')}=======================\n")
